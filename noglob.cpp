@@ -58,6 +58,96 @@ auto GlobalMutationMatcherAddressOf =
        (varDecl
         (hasGlobalStorage(),
          unless(hasType(isConstQualified()))))))).bind("global");
+auto GlobalMutationMatcherUnaryIncrement =
+    unaryOperator
+    (hasOperatorName("++"),
+     hasUnaryOperand
+     (ignoringParenImpCasts
+      (declRefExpr
+       (to
+        (varDecl
+         (hasGlobalStorage())))))).bind("global");
+auto GlobalMutationMatcherUnaryDecrement =
+    unaryOperator
+    (hasOperatorName("--"),
+     hasUnaryOperand
+     (ignoringParenImpCasts
+      (declRefExpr
+       (to
+        (varDecl
+         (hasGlobalStorage())))))).bind("global");
+auto GlobalMutationMatcherBinaryUpdateAdd =
+    binaryOperator
+    (hasOperatorName("+="),
+     hasLHS
+     (ignoringParenImpCasts
+      (declRefExpr
+       (to
+        (varDecl
+         (hasGlobalStorage())))))).bind("global");
+auto GlobalMutationMatcherBinaryUpdateSubtract =
+    binaryOperator
+    (hasOperatorName("-="),
+     hasLHS
+     (ignoringParenImpCasts
+      (declRefExpr
+       (to
+        (varDecl
+         (hasGlobalStorage())))))).bind("global");
+auto GlobalMutationMatcherBinaryUpdateDivide =
+    binaryOperator
+    (hasOperatorName("/="),
+     hasLHS
+     (ignoringParenImpCasts
+      (declRefExpr
+       (to
+        (varDecl
+         (hasGlobalStorage())))))).bind("global");
+auto GlobalMutationMatcherBinaryUpdateMultiply =
+    binaryOperator
+    (hasOperatorName("*="),
+     hasLHS
+     (ignoringParenImpCasts
+      (declRefExpr
+       (to
+        (varDecl
+         (hasGlobalStorage())))))).bind("global");
+auto GlobalMutationMatcherBinaryUpdateMod =
+    binaryOperator
+    (hasOperatorName("%="),
+     hasLHS
+     (ignoringParenImpCasts
+      (declRefExpr
+       (to
+        (varDecl
+         (hasGlobalStorage())))))).bind("global");
+auto GlobalMutationMatcherBinaryUpdateAnd =
+    binaryOperator
+    (hasOperatorName("&="),
+     hasLHS
+     (ignoringParenImpCasts
+      (declRefExpr
+       (to
+        (varDecl
+         (hasGlobalStorage())))))).bind("global");
+auto GlobalMutationMatcherBinaryUpdateOr =
+    binaryOperator
+    (hasOperatorName("|="),
+     hasLHS
+     (ignoringParenImpCasts
+      (declRefExpr
+       (to
+        (varDecl
+         (hasGlobalStorage())))))).bind("global");
+auto GlobalMutationMatcherBinaryUpdateXor =
+    binaryOperator
+    (hasOperatorName("^="),
+     hasLHS
+     (ignoringParenImpCasts
+      (declRefExpr
+       (to
+        (varDecl
+         (hasGlobalStorage())))))).bind("global");
 
 class GlobalPrinter : public MatchFinder::MatchCallback {
 public :
@@ -87,6 +177,16 @@ int main(int argc, const char **argv) {
 
   finder.addMatcher(GlobalMutationMatcherAssignment, &globalPrinter);
   finder.addMatcher(GlobalMutationMatcherAddressOf, &globalPrinter);
-  
+  finder.addMatcher(GlobalMutationMatcherUnaryIncrement, &globalPrinter);
+  finder.addMatcher(GlobalMutationMatcherUnaryDecrement, &globalPrinter);
+  finder.addMatcher(GlobalMutationMatcherBinaryUpdateAdd, &globalPrinter);
+  finder.addMatcher(GlobalMutationMatcherBinaryUpdateSubtract, &globalPrinter);
+  finder.addMatcher(GlobalMutationMatcherBinaryUpdateDivide, &globalPrinter);
+  finder.addMatcher(GlobalMutationMatcherBinaryUpdateMultiply, &globalPrinter);
+  finder.addMatcher(GlobalMutationMatcherBinaryUpdateMod, &globalPrinter);
+  finder.addMatcher(GlobalMutationMatcherBinaryUpdateAnd, &globalPrinter);
+  finder.addMatcher(GlobalMutationMatcherBinaryUpdateOr, &globalPrinter);
+  finder.addMatcher(GlobalMutationMatcherBinaryUpdateXor, &globalPrinter);
+
   return Tool.run(newFrontendActionFactory(&finder).get()) || (Werror.getValue() && warningCount);
 }
