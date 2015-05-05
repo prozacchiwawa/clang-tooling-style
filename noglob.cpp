@@ -40,114 +40,46 @@ int warningCount = 0;
 // We want to catch:
 // 1) Global on the left side of equals
 // 2) Non-const pointer or reference to global
-auto GlobalMutationMatcherAssignment = 
-    binaryOperator
-    (hasOperatorName("="), 
-     hasLHS
-     (ignoringParenImpCasts
-      (declRefExpr
-       (to
-        (varDecl
-         (hasGlobalStorage())))))).bind("global");
-auto GlobalMutationMatcherAddressOf =
-    unaryOperator
-    (hasOperatorName("&"),
-     hasUnaryOperand
-     (declRefExpr
-      (to
-       (varDecl
-        (hasGlobalStorage(),
-         unless(hasType(isConstQualified()))))))).bind("global");
-auto GlobalMutationMatcherUnaryIncrement =
-    unaryOperator
-    (hasOperatorName("++"),
-     hasUnaryOperand
-     (ignoringParenImpCasts
-      (declRefExpr
-       (to
-        (varDecl
-         (hasGlobalStorage())))))).bind("global");
-auto GlobalMutationMatcherUnaryDecrement =
-    unaryOperator
-    (hasOperatorName("--"),
-     hasUnaryOperand
-     (ignoringParenImpCasts
-      (declRefExpr
-       (to
-        (varDecl
-         (hasGlobalStorage())))))).bind("global");
-auto GlobalMutationMatcherBinaryUpdateAdd =
-    binaryOperator
-    (hasOperatorName("+="),
-     hasLHS
-     (ignoringParenImpCasts
-      (declRefExpr
-       (to
-        (varDecl
-         (hasGlobalStorage())))))).bind("global");
-auto GlobalMutationMatcherBinaryUpdateSubtract =
-    binaryOperator
-    (hasOperatorName("-="),
-     hasLHS
-     (ignoringParenImpCasts
-      (declRefExpr
-       (to
-        (varDecl
-         (hasGlobalStorage())))))).bind("global");
-auto GlobalMutationMatcherBinaryUpdateDivide =
-    binaryOperator
-    (hasOperatorName("/="),
-     hasLHS
-     (ignoringParenImpCasts
-      (declRefExpr
-       (to
-        (varDecl
-         (hasGlobalStorage())))))).bind("global");
-auto GlobalMutationMatcherBinaryUpdateMultiply =
-    binaryOperator
-    (hasOperatorName("*="),
-     hasLHS
-     (ignoringParenImpCasts
-      (declRefExpr
-       (to
-        (varDecl
-         (hasGlobalStorage())))))).bind("global");
-auto GlobalMutationMatcherBinaryUpdateMod =
-    binaryOperator
-    (hasOperatorName("%="),
-     hasLHS
-     (ignoringParenImpCasts
-      (declRefExpr
-       (to
-        (varDecl
-         (hasGlobalStorage())))))).bind("global");
-auto GlobalMutationMatcherBinaryUpdateAnd =
-    binaryOperator
-    (hasOperatorName("&="),
-     hasLHS
-     (ignoringParenImpCasts
-      (declRefExpr
-       (to
-        (varDecl
-         (hasGlobalStorage())))))).bind("global");
-auto GlobalMutationMatcherBinaryUpdateOr =
-    binaryOperator
-    (hasOperatorName("|="),
-     hasLHS
-     (ignoringParenImpCasts
-      (declRefExpr
-       (to
-        (varDecl
-         (hasGlobalStorage())))))).bind("global");
-auto GlobalMutationMatcherBinaryUpdateXor =
-    binaryOperator
-    (hasOperatorName("^="),
-     hasLHS
-     (ignoringParenImpCasts
-      (declRefExpr
-       (to
-        (varDecl
-         (hasGlobalStorage())))))).bind("global");
+auto bannedDecl = 
+    ignoringParenImpCasts
+    (declRefExpr
+     (to
+      (varDecl
+       (hasGlobalStorage(),
+        unless(hasType(isConstQualified()))))));
+
+auto globalDecl =
+    ignoringParenImpCasts
+    (declRefExpr
+     (to
+      (varDecl
+       (hasGlobalStorage()))));
+
+auto GlobalMutationMatcherSubscript =
+    arraySubscriptExpr
+    (hasBase(bannedDecl)).bind("global");
+
+auto bannedUnary(const std::string &name, const std::string &binding) -> 
+    decltype(unaryOperator
+             (hasOperatorName(name),
+              hasUnaryOperand
+              (bannedDecl)).bind(binding)) {
+    return unaryOperator
+        (hasOperatorName(name),
+         hasUnaryOperand
+         (bannedDecl)).bind(binding);
+}
+
+auto bannedBinary(const std::string &name, const std::string &binding) ->
+    decltype(binaryOperator
+             (hasOperatorName(name), 
+              hasLHS
+              (bannedDecl)).bind(binding)) {
+    return binaryOperator
+        (hasOperatorName(name), 
+         hasLHS
+         (bannedDecl)).bind(binding);
+}
 
 class GlobalPrinter : public MatchFinder::MatchCallback {
 public :
@@ -175,18 +107,14 @@ int main(int argc, const char **argv) {
   llvm::DebugFlag = Debug.getValue();
 #endif
 
-  finder.addMatcher(GlobalMutationMatcherAssignment, &globalPrinter);
-  finder.addMatcher(GlobalMutationMatcherAddressOf, &globalPrinter);
-  finder.addMatcher(GlobalMutationMatcherUnaryIncrement, &globalPrinter);
-  finder.addMatcher(GlobalMutationMatcherUnaryDecrement, &globalPrinter);
-  finder.addMatcher(GlobalMutationMatcherBinaryUpdateAdd, &globalPrinter);
-  finder.addMatcher(GlobalMutationMatcherBinaryUpdateSubtract, &globalPrinter);
-  finder.addMatcher(GlobalMutationMatcherBinaryUpdateDivide, &globalPrinter);
-  finder.addMatcher(GlobalMutationMatcherBinaryUpdateMultiply, &globalPrinter);
-  finder.addMatcher(GlobalMutationMatcherBinaryUpdateMod, &globalPrinter);
-  finder.addMatcher(GlobalMutationMatcherBinaryUpdateAnd, &globalPrinter);
-  finder.addMatcher(GlobalMutationMatcherBinaryUpdateOr, &globalPrinter);
-  finder.addMatcher(GlobalMutationMatcherBinaryUpdateXor, &globalPrinter);
+  finder.addMatcher(GlobalMutationMatcherSubscript, &globalPrinter);
+  for (auto unop : std::vector<std::string> { "&", "--", "++" }) {
+      finder.addMatcher(bannedUnary(unop, "global"), &globalPrinter);
+  }
+  for (auto binop : std::vector<std::string> 
+      { "=", "+=", "-=", "/=", "%=", "^=", "&=", "*=", "|=", "<<=", ">>=" }) {
+      finder.addMatcher(bannedBinary(binop, "global"), &globalPrinter);
+  }
 
   return Tool.run(newFrontendActionFactory(&finder).get()) || (Werror.getValue() && warningCount);
 }
