@@ -1,6 +1,10 @@
 int g_yuck;
 
-class TestClass { };
+class TestClass { 
+public:
+    int bang() { return 0; }
+    int okey() const { return 0; }
+};
 
 namespace {
 	const char *n_yuck = "no way";
@@ -9,6 +13,7 @@ namespace {
     const char ok_array[] = "yay";
 }
 extern TestClass *tc;
+TestClass _tc;
 static double gs_yuck = 0.333;
 static const double gs_ok = 3.14159;
 static constexpr float gs_ok_constexpr = 9.9999;
@@ -29,6 +34,10 @@ int f() {
     int *tehe_yuck = &g_yuck; // matches address of non-const global
     const double *tehe_ok = &gs_ok;
     n_yuck = "crud"; // matches assignment to global (but the pointer is to const elements)
+    _tc.bang(); // non-const method call of global object
+    tc->bang(); // non-const method call through global pointer
+    _tc.okey();
+    tc->okey();
 	return 0;
 }
 

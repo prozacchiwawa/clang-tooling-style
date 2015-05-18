@@ -3,6 +3,7 @@ set(LLVM_USED_LIBS clangTooling clangBasic clangAST)
 
 add_clang_executable(noglob
   DisallowGlobals.cpp
+  DisallowNewDelete.cpp
   ResultPrinter.cpp
   RuleChecker.cpp
   tool.cpp

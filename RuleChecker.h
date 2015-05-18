@@ -4,6 +4,7 @@
 #include <functional>
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "llvm/Support/CommandLine.h"
 
 class RuleChecker : public clang::ast_matchers::MatchFinder::MatchCallback {
 public:
@@ -12,6 +13,9 @@ public:
         printer_t;
 
     void run(const clang::ast_matchers::MatchFinder::MatchResult &result);
+    void setAnalyzePaths(const std::vector<std::string> &paths);
+
+    virtual void SetupMatches(clang::ast_matchers::MatchFinder &finder) = 0;
     virtual std::string getRuleName() const = 0;
     virtual std::string evaluateRule(const clang::Stmt *) = 0;
 
@@ -24,6 +28,7 @@ protected:
 
 private:
     printer_t printer;
+    std::vector<std::string> paths;
 };
 
 #endif//_RULE_CHECKER_H_

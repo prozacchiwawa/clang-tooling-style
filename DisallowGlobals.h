@@ -9,7 +9,7 @@
 class DisallowGlobals : public RuleChecker
 {
 public:
-    void SetupMatches(clang::ast_matchers::MatchFinder &finder);
+    void SetupMatches(clang::ast_matchers::MatchFinder &finder) override;
 
     std::string getRuleName() const override { return "global"; }
     std::string evaluateRule(const clang::Stmt *) override;
