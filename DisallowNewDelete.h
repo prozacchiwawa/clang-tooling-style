@@ -4,9 +4,10 @@
 #include <string>
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/Basic/SourceManager.h"
 #include "RuleChecker.h"
 
-class DisallowNew : public RuleChecker
+class DisallowNew : public RuleChecker<clang::Stmt>
 {
 public:
     void SetupMatches(clang::ast_matchers::MatchFinder &finder) override;
@@ -15,7 +16,7 @@ public:
     std::string evaluateRule(const clang::Stmt *) override;
 };
 
-class DisallowDelete : public RuleChecker
+class DisallowDelete : public RuleChecker<clang::Stmt>
 {
 public:
     void SetupMatches(clang::ast_matchers::MatchFinder &finder) override;

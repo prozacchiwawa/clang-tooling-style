@@ -4,9 +4,10 @@
 #include <string>
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/Basic/SourceManager.h"
 #include "RuleChecker.h"
 
-class DisallowGlobals : public RuleChecker
+class DisallowGlobals : public RuleChecker<clang::Stmt>
 {
 public:
     void SetupMatches(clang::ast_matchers::MatchFinder &finder) override;

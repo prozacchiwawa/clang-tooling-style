@@ -12,6 +12,7 @@
 
 #include "DisallowGlobals.h"
 #include "DisallowNewDelete.h"
+#include "DisallowNonAbstract.h"
 #include "ResultPrinter.h"
 
 using namespace clang;
@@ -30,7 +31,13 @@ static llvm::cl::OptionCategory NoGlobalStyleCategory("noglob options");
 static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 
 // A help message for this specific tool can be added afterwards.
-static cl::extrahelp MoreHelp("\nDetect direct mutation of globals from checked code.");
+static cl::extrahelp MoreHelp
+("\nDetect\n"
+ "- Direct mutation of globals from checked code\n"
+ "- Uses of bare new and delete operators\n"
+ "- Non-abstract class or struct types in abstract-only namespaces\n"
+ "- Coupling to non-abstract classes and structs in coupling-disallwed\n"
+ "  namespaces\n");
 
 static cl::opt<bool> Debug
 ("debug", 
@@ -41,8 +48,13 @@ static cl::opt<bool> Werror
  cl::desc("Promote warnings to errors"),
  cl::cat(NoGlobalStyleCategory));
 static cl::list<std::string> analyze_paths
-("analyze-paths",
+("analyze-path",
  cl::desc("Path of files to analyze.  Files not matching one of these prefixes will be ignored."),
+ cl::cat(NoGlobalStyleCategory));
+
+static cl::list<std::string> abstract_namespaces
+("abstract-namespace",
+ cl::desc("Namespace designated to contain only abstract classes and structs."),
  cl::cat(NoGlobalStyleCategory));
 
 int main(int argc, const char **argv) {
@@ -51,28 +63,39 @@ int main(int argc, const char **argv) {
                    OptionsParser.getSourcePathList());
     
     MatchFinder finder;
-    std::unique_ptr<RuleChecker> rules[] = {
+
+    // Snarf abstract-only namespaces from the environment.
+    std::vector<std::string> abstract_namespaces_v;
+    std::copy(abstract_namespaces.begin(), abstract_namespaces.end(), std::back_inserter(abstract_namespaces_v));
+    std::unique_ptr<RuleCheckerBase> rules[] = {
         make_unique<DisallowNew>(),
         make_unique<DisallowDelete>(),
-        make_unique<DisallowGlobals>()
+        make_unique<DisallowGlobals>(),
+        make_unique<DisallowNonAbstract>(abstract_namespaces_v)
     };
-    ResultPrinter resultPrinter;
-    RuleChecker::printer_t printer(std::bind(&ResultPrinter::PrintWarning, &resultPrinter, _1, _2, _3));
-    std::vector<std::string> paths;
-    auto &analyze_paths_value = analyze_paths;
-    std::copy(analyze_paths_value.begin(), analyze_paths_value.end(), std::back_inserter(paths));
+    size_t rules_size = sizeof(rules) / sizeof(rules[0]);
+    auto rules_begin = &rules[0];
+    auto rules_end = &rules[rules_size];
+
+    std::vector<std::string> analyze_paths_v;
+    std::copy(analyze_paths.begin(), analyze_paths.end(), std::back_inserter(analyze_paths_v));
 
     for (size_t i = 0; i < sizeof(rules) / sizeof(rules[0]); ++i) {
         auto &rule = rules[i];
-        rule->setAnalyzePaths(paths);
+        rule->setAnalyzePaths(analyze_paths_v);
         rule->SetupMatches(finder);
-        rule->setPrinter(printer);
+        rule->getPrinter().setDebug(Debug.getValue());
     }
     
 #ifndef NDEBUG
     llvm::DebugFlag = Debug.getValue();
 #endif
-    resultPrinter.setDebug(Debug.getValue());
-    
-    return Tool.run(newFrontendActionFactory(&finder).get()) || (Werror.getValue() && resultPrinter.getWarnings());
+
+    return Tool.run(newFrontendActionFactory(&finder).get()) || 
+        (Werror.getValue() && 
+         std::any_of
+         (rules_begin, rules_end, 
+          [] (const std::unique_ptr<RuleCheckerBase> &rule) {
+             return rule->getPrinter().getWarnings();
+         }));
 }

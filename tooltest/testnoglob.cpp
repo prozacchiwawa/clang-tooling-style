@@ -1,10 +1,35 @@
 int g_yuck;
 
-class TestClass { 
-public:
-    int bang() { return 0; }
-    int okey() const { return 0; }
-};
+namespace AllowedCouplingNonAbstract {
+    class TestClass { 
+    public:
+        int bang() { return 0; }
+        int okey() const { return 0; }
+    };
+}
+
+using AllowedCouplingNonAbstract::TestClass;
+
+namespace AllowedCouplingAbstract {
+    class EmptyAllowed {
+    };
+
+    class ITestAllowed {
+    public:
+        virtual ~ITestAllowed() { }
+        virtual void Test() = 0;
+    };
+
+    class TestNotAllowed {
+    public:
+        void Test() { }
+    };
+
+    class TestNotAllowedDespiteVirtual {
+        void NotOk() { }
+        virtual void Test() { }
+    };
+}
 
 namespace {
 	const char *n_yuck = "no way";
