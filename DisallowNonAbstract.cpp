@@ -20,10 +20,12 @@ namespace {
         return recordDecl
             (matchesName(nameMatch),
              unless(isImplicit()),
-             hasMethod
-             (allOf
-              (isNotVirtual(),
-               isNotImplicit()))).bind(binding);
+             anyOf
+             (has(fieldDecl()),
+              hasMethod
+              (allOf
+               (isNotVirtual(),
+                isNotImplicit())))).bind(binding);
     }
 }
 
