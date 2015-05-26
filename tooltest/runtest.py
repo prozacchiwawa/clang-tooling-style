@@ -10,4 +10,4 @@ testjson = [{"directory": curdir, "command": "/usr/bin/clang++ -std=c++11 -c -o 
 open("compile_commands.json","w").write(json.dumps(testjson))
 for f in testfiles:
     print "== %s ==" % f
-    os.system("\"%s\" %s -analyze-path %s \"%s.cpp\"" % (os.path.join(bindir, "noglob"), " ".join(sys.argv[1:]), f, os.path.join(curdir, f)))
+    os.system("\"%s\" %s -analyze-path %s -abstract-namespace ::AllowedCouplingAbstract -coupling-banned ::NotAllowedCoupling \"%s.cpp\"" % (os.path.join(bindir, "noglob"), " ".join(sys.argv[1:]), f, os.path.join(curdir, f)))

@@ -20,6 +20,15 @@ namespace AllowedCouplingAbstract {
         virtual void Test() = 0;
     };
 
+    class ITestNotAllowedBecauseOfField {
+    public:
+        virtual ~ITestNotAllowedBecauseOfField() { }
+        virtual void Perform() = 0;
+
+    private:
+        int mess_things_up;
+    };
+
     class TestNotAllowed {
     public:
         void Test() { }
@@ -31,6 +40,16 @@ namespace AllowedCouplingAbstract {
     };
 }
 
+namespace NotAllowedCoupling {
+    using namespace AllowedCouplingAbstract;
+    class CantUseMe : public ITestAllowed {
+    public:
+        void Test() { int x = 333; }
+    };
+    CantUseMe *DirectFactoryNotAllowed() { return nullptr; }
+    ITestAllowed *CanUseFactory() { return nullptr; }
+}
+
 namespace {
 	const char *n_yuck = "no way";
 	const char *const n_ok = "Hi there";
@@ -39,12 +58,27 @@ namespace {
 }
 extern TestClass *tc;
 TestClass _tc;
+NotAllowedCoupling::CantUseMe gs_cantUseMeInstance; // Names type in banned namespace
 static double gs_yuck = 0.333;
 static const double gs_ok = 3.14159;
 static constexpr float gs_ok_constexpr = 9.9999;
 
 bool test(const char *data) {
     return !!data[0];
+}
+
+void canUseInterface(AllowedCouplingAbstract::ITestAllowed *useIt) {
+}
+
+void bannedTest() {
+    auto sneakyNotAllowed = NotAllowedCoupling::DirectFactoryNotAllowed(); // Couples to type in banned namespace
+    auto allowed = NotAllowedCoupling::CanUseFactory();
+    sneakyNotAllowed->Test(); // Not allowed
+    (*sneakyNotAllowed).Test(); // Also not allowed
+    allowed->Test();
+    canUseInterface(NotAllowedCoupling::DirectFactoryNotAllowed()); // Not allowed
+    canUseInterface(sneakyNotAllowed); // Not allowed
+    canUseInterface(allowed);
 }
 
 int f() {

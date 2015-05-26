@@ -10,5 +10,6 @@ int *x;
 
 int main() {
     x = new int();
+    auto y = (nullptr, new int());
     delete x;
 }

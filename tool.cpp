@@ -13,6 +13,7 @@
 #include "DisallowGlobals.h"
 #include "DisallowNewDelete.h"
 #include "DisallowNonAbstract.h"
+#include "DisallowCoupling.h"
 #include "ResultPrinter.h"
 
 using namespace clang;
@@ -57,6 +58,11 @@ static cl::list<std::string> abstract_namespaces
  cl::desc("Namespace designated to contain only abstract classes and structs."),
  cl::cat(NoGlobalStyleCategory));
 
+static cl::list<std::string> banned_namespaces
+("coupling-banned",
+ cl::desc("Namespace designated to be banned from coupling.  References to classes and structs in this namespace are banned."),
+ cl::cat(NoGlobalStyleCategory));
+
 int main(int argc, const char **argv) {
     CommonOptionsParser OptionsParser(argc, argv, NoGlobalStyleCategory);
     ClangTool Tool(OptionsParser.getCompilations(),
@@ -65,13 +71,15 @@ int main(int argc, const char **argv) {
     MatchFinder finder;
 
     // Snarf abstract-only namespaces from the environment.
-    std::vector<std::string> abstract_namespaces_v;
+    std::vector<std::string> abstract_namespaces_v, banned_namespaces_v;
     std::copy(abstract_namespaces.begin(), abstract_namespaces.end(), std::back_inserter(abstract_namespaces_v));
+    std::copy(banned_namespaces.begin(), banned_namespaces.end(), std::back_inserter(banned_namespaces_v));
     std::unique_ptr<RuleCheckerBase> rules[] = {
         make_unique<DisallowNew>(),
         make_unique<DisallowDelete>(),
         make_unique<DisallowGlobals>(),
-        make_unique<DisallowNonAbstract>(abstract_namespaces_v)
+        make_unique<DisallowNonAbstract>(abstract_namespaces_v),
+        make_unique<DisallowCoupling>(banned_namespaces_v)
     };
     size_t rules_size = sizeof(rules) / sizeof(rules[0]);
     auto rules_begin = &rules[0];
