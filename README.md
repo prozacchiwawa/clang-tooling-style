@@ -20,8 +20,5 @@ Currently enforces the following rules:
 - Expressions that generate non-const references to global storage are not allowed.
 - Bare new and delete operators are not allowed.
 - Namespaces may be specified where non-abstract classes are not allowed.
-
-Planned rules:
-
-- Expressions generating objects of record type from namespaces to which coupling is banned.
+- Basic detection of expressions generating references to structs and classes in banned namespaces, except from functions or methods defined in those namespaces.
 
