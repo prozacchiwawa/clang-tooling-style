@@ -81,7 +81,7 @@ namespace {
     auto banned(const std::string &binding, const std::string &nameMatch) -> Matcher<clang::Decl> {
         return 
             functionDecl
-            (unless(anyOf(methodDecl(ofClass(matchesName(nameMatch))),namedDecl(matchesName(nameMatch)))),
+            (unless(anyOf(cxxMethodDecl(ofClass(matchesName(nameMatch))),namedDecl(matchesName(nameMatch)))),
              functionBody(compoundStmt(forEach(matchingStatement(binding, nameMatch)))));
     }
 }

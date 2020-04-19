@@ -45,7 +45,7 @@ public:
         if (const RuleTarget *S = result.Nodes.getNodeAs<RuleTarget>(getRuleName())) {
             auto msg = evaluateRule(S);
             if (!msg.empty()) {
-                auto loc = S->getLocStart();
+                auto loc = S->getBeginLoc();
                 auto file_path = result.SourceManager->getFilename(loc);
                 if (std::any_of
                     (paths.begin(), paths.end(), 

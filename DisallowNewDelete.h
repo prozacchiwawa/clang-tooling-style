@@ -2,8 +2,8 @@
 #define _DISALLOW_NEW_DELETE_H_
 
 #include <string>
-#include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Basic/SourceManager.h"
 #include "RuleChecker.h"
 

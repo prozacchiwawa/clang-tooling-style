@@ -16,8 +16,8 @@ namespace clang {
 }
 
 namespace {
-    auto bannedRecordDecl(const std::string &binding, const std::string &nameMatch) -> decltype(recordDecl().bind("")) {
-        return recordDecl
+    auto bannedRecordDecl(const std::string &binding, const std::string &nameMatch) -> decltype(cxxRecordDecl().bind("")) {
+        return cxxRecordDecl
             (matchesName(nameMatch),
              unless(isImplicit()),
              anyOf

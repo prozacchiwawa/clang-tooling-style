@@ -27,7 +27,7 @@ class ResultPrinter : public ResultPrinterBase {
 public:
     void PrintWarning(const clang::SourceManager &sm, const RuleTarget *S, const std::string &msg)
     {
-        auto loc = S->getLocStart();
+        auto loc = S->getBeginLoc();
         llvm::outs() << "(" << loc.printToString(sm) << ") " << msg << "\n";
         warnings_++;
         if (debug_) {

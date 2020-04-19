@@ -75,11 +75,11 @@ int main(int argc, const char **argv) {
     std::copy(abstract_namespaces.begin(), abstract_namespaces.end(), std::back_inserter(abstract_namespaces_v));
     std::copy(banned_namespaces.begin(), banned_namespaces.end(), std::back_inserter(banned_namespaces_v));
     std::unique_ptr<RuleCheckerBase> rules[] = {
-        make_unique<DisallowNew>(),
-        make_unique<DisallowDelete>(),
-        make_unique<DisallowGlobals>(),
-        make_unique<DisallowNonAbstract>(abstract_namespaces_v),
-        make_unique<DisallowCoupling>(banned_namespaces_v)
+	std::unique_ptr<DisallowNew>(new DisallowNew()),
+        std::unique_ptr<DisallowDelete>(new DisallowDelete()),
+        std::unique_ptr<DisallowGlobals>(new DisallowGlobals()),
+        std::unique_ptr<DisallowNonAbstract>(new DisallowNonAbstract(abstract_namespaces_v)),
+        std::unique_ptr<DisallowCoupling>(new DisallowCoupling(banned_namespaces_v))
     };
     size_t rules_size = sizeof(rules) / sizeof(rules[0]);
     auto rules_begin = &rules[0];

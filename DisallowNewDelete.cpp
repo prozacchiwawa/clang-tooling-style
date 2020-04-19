@@ -5,8 +5,8 @@ using namespace clang::ast_matchers;
 
 namespace {
 // We want to catch uses of new and delete.
-    auto bannedNew = newExpr().bind("new");
-    auto bannedDelete = deleteExpr().bind("delete");
+    auto bannedNew = cxxNewExpr().bind("new");
+    auto bannedDelete = cxxDeleteExpr().bind("delete");
 }
 
 void DisallowNew::SetupMatches(MatchFinder &finder)
